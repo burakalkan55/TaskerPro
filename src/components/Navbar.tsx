@@ -3,22 +3,34 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { motion } from "@/components/motion";
+import { motion } from "framer-motion";
 import Logo from "./Logo";
 
 export default function Navbar() {
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
     handleScroll();
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Login olmuş mu diye /api/me'den kullanıcıyı çek
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const res = await fetch("/api/me");
+        const data = await res.json();
+        setUser(data.user);
+      } catch (err) {
+        console.error("me error:", err);
+      }
+    }
+    fetchUser();
   }, []);
 
   const navLinks = [
@@ -28,6 +40,11 @@ export default function Navbar() {
   ];
 
   const closeMenu = () => setIsOpen(false);
+
+  async function handleLogout() {
+    await fetch("/api/logout", { method: "POST" });
+    window.location.href = "/login";
+  }
 
   return (
     <motion.header
@@ -74,18 +91,29 @@ export default function Navbar() {
 
         {/* DESKTOP BUTTONS */}
         <div className="hidden md:flex gap-3">
-          <Link
-            href="/login"
-            className="px-4 py-2 text-gray-700 hover:text-blue-600 transition"
-          >
-            Login
-          </Link>
-          <Link
-            href="/register"
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-          >
-            Register
-          </Link>
+          {!user ? (
+            <>
+              <Link
+                href="/login"
+                className="px-4 py-2 text-gray-700 hover:text-blue-600 transition"
+              >
+                Login
+              </Link>
+              <Link
+                href="/register"
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+              >
+                Register
+              </Link>
+            </>
+          ) : (
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition"
+            >
+              Logout
+            </button>
+          )}
         </div>
 
         {/* MOBILE HAMBURGER */}
@@ -136,20 +164,31 @@ export default function Navbar() {
             ))}
 
             <div className="mt-3 flex flex-col gap-2">
-              <Link
-                href="/login"
-                onClick={closeMenu}
-                className="w-full text-center px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-100 transition"
-              >
-                Login
-              </Link>
-              <Link
-                href="/register"
-                onClick={closeMenu}
-                className="w-full text-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-              >
-                Register
-              </Link>
+              {!user ? (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={closeMenu}
+                    className="w-full text-center px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-100 transition"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={closeMenu}
+                    className="w-full text-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                  >
+                    Register
+                  </Link>
+                </>
+              ) : (
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition"
+                >
+                  Logout
+                </button>
+              )}
             </div>
           </div>
         </div>

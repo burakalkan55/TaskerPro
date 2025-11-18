@@ -1,33 +1,85 @@
 "use client";
 
+import { motion } from "framer-motion";
+import Navbar from "@/components/Navbar";
 import { useEffect, useState } from "react";
 
 export default function Dashboard() {
+  const [rooms, setRooms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Burada UI animasyonlarını kontrol edebiliriz
-    setLoading(false);
+    async function fetchRooms() {
+      try {
+        const res = await fetch("/api/rooms/list");
+        const data = await res.json();
+        setRooms(data.rooms || []);
+      } catch (err) {
+        console.error("Error fetching rooms:", err);
+      }
+      setLoading(false);
+    }
+
+    fetchRooms();
   }, []);
 
-  if (loading) return <p className="pt-20 text-center">Loading...</p>;
-
   return (
-    <main className="pt-24 px-6">
-      <h1 className="text-3xl font-bold">Dashboard</h1>
-      <p className="mt-2 text-gray-600">
-        Welcome to your workspace!
-      </p>
+    <main className="min-h-screen bg-gray-50">
+      
+     
 
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-4 rounded-lg border shadow">
-          <h2 className="text-xl font-semibold">Your Rooms</h2>
-          <p className="text-gray-500">Here will be your room list.</p>
-        </div>
+      <div className="pt-28 max-w-6xl mx-auto px-6">
 
-        <div className="p-4 rounded-lg border shadow">
-          <h2 className="text-xl font-semibold">Create New Room</h2>
-          <p className="text-gray-500">Button & modal will be here.</p>
+        <motion.h1
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="text-3xl font-bold text-gray-900"
+        >
+          Dashboard
+        </motion.h1>
+
+        <p className="text-gray-600 mt-2 mb-6">
+          Manage your rooms and collaborate efficiently.
+        </p>
+
+        {/* CREATE ROOM */}
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          whileTap={{ scale: 0.95 }}
+          className="mb-8 px-5 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+        >
+          + Create Room
+        </motion.button>
+
+        {/* ROOMS GRID */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+          {loading && <p className="text-gray-500">Loading rooms...</p>}
+
+          {!loading && rooms.length === 0 && (
+            <p className="text-gray-500">You have no rooms yet.</p>
+          )}
+
+          {!loading &&
+            rooms.map((room, index) => (
+              <motion.div
+                key={room.id}
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.05 * index }}
+                className="p-5 bg-white rounded-xl shadow border border-gray-200 hover:shadow-md transition cursor-pointer"
+                onClick={() => (window.location.href = `/room/${room.id}`)}
+              >
+                <h3 className="text-xl font-semibold text-gray-900">
+                  {room.name}
+                </h3>
+                <p className="text-gray-600 text-sm mt-2">
+                  Created: {new Date(room.createdAt).toLocaleDateString()}
+                </p>
+              </motion.div>
+            ))}
         </div>
       </div>
     </main>
