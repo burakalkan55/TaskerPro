@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextRequest) {
+export async function POST(req: NextRequest) {
   const cookieHeader = req.headers.get("cookie");
 
   const token = cookieHeader
@@ -15,13 +15,17 @@ export async function GET(req: NextRequest) {
   const decoded = token ? verifyToken(token) : null;
 
   if (!decoded) {
-    return NextResponse.json({ rooms: [] });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const rooms = await prisma.room.findMany({
-    where: { ownerId: decoded.userId },
-    orderBy: { createdAt: "desc" },
+  const { name } = await req.json();
+
+  const room = await prisma.room.create({
+    data: {
+      name,
+      ownerId: decoded.userId,
+    },
   });
 
-  return NextResponse.json({ rooms });
+  return NextResponse.json({ room }, { status: 201 });
 }

@@ -93,6 +93,12 @@ export default function Navbar() {
         <div className="hidden md:flex gap-3">
           {!user ? (
             <>
+             <Link
+                href="/dashboard"
+                className="px-4 py-2 text-gray-700 hover:text-blue-600 transition"
+              >
+                Dashboard
+              </Link>
               <Link
                 href="/login"
                 className="px-4 py-2 text-gray-700 hover:text-blue-600 transition"
@@ -105,6 +111,8 @@ export default function Navbar() {
               >
                 Register
               </Link>
+
+             
             </>
           ) : (
             <button
