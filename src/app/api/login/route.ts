@@ -1,37 +1,48 @@
+export const runtime = "nodejs";
+
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcrypt";
+import { generateToken } from "@/lib/auth";
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
 
-    if (!email || !password) {
-      return Response.json(
-        { error: "Email and password required" },
-        { status: 400 }
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email },
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) {
+      return NextResponse.json(
+        { error: "Invalid credentials" },
+        { status: 401 }
+      );
+    }
+
+    // JWT oluştur
+    const token = generateToken(user.id);
+
+    // Cookie yaz
+    const res = NextResponse.json({ success: true });
+    res.cookies.set({
+      name: "token",
+      value: token,
+      httpOnly: true,
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+      sameSite: "lax",
     });
 
-    if (!user) {
-      return Response.json({ error: "User not found" }, { status: 404 });
-    }
-
-    const valid = await bcrypt.compare(password, user.password);
-
-    if (!valid) {
-      return Response.json({ error: "Invalid credentials" }, { status: 401 });
-    }
-
-    return Response.json(
-      { message: "Login successful", user: { id: user.id, email: user.email } },
-      { status: 200 }
-    );
+    return res;
   } catch (err) {
-    console.error(err);
-    return Response.json({ error: "Server error" }, { status: 500 });
+    console.error("Login error:", err);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
