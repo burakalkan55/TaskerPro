@@ -2,7 +2,7 @@
 
 import { useEffect, useState, FormEvent } from "react";
 import { useParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Reorder } from "framer-motion";
 
 
 type Status = "todo" | "doing" | "done";
@@ -167,6 +167,46 @@ export default function RoomBoardPage() {
     }
   }
 
+  // ---- DRAG AND DROP HANDLER ----
+  async function handleTaskStatusChange(taskId: string, newStatus: Status) {
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+
+    // Optimistic update
+    setTasks((prev) =>
+      prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
+    );
+
+    // API call to persist change
+    try {
+      const res = await fetch("/api/tasks/update", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: taskId,
+          title: task.title,
+          status: newStatus,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        console.error(data.error || "Update failed");
+        // Revert on error
+        setTasks((prev) =>
+          prev.map((t) => (t.id === taskId ? { ...t, status: task.status } : t))
+        );
+      }
+    } catch (err) {
+      console.error("updateTask error:", err);
+      // Revert on error
+      setTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? { ...t, status: task.status } : t))
+      );
+    }
+  }
+
   return (
     <main className="min-h-screen bg-slate-50">
 
@@ -196,6 +236,17 @@ export default function RoomBoardPage() {
           {(statuses as readonly Status[]).map((status) => (
             <section
               key={status}
+              onDragOver={(e: any) => {
+                e.preventDefault();
+                e.dataTransfer!.dropEffect = "move";
+              }}
+              onDrop={(e: any) => {
+                e.preventDefault();
+                const taskId = e.dataTransfer?.getData("taskId");
+                if (taskId) {
+                  handleTaskStatusChange(taskId, status);
+                }
+              }}
               className="bg-white/90 rounded-2xl border border-slate-200 shadow-sm flex flex-col max-h-[60vh] sm:max-h-[65vh]"
             >
               {/* COLUMN HEADER */}
@@ -227,9 +278,18 @@ export default function RoomBoardPage() {
                 {columns[status].map((task) => (
                   <motion.div
                     key={task.id}
+                    draggable
+                    onDragStart={(e: any) => {
+                      e.dataTransfer?.setData("taskId", task.id);
+                      e.dataTransfer!.effectAllowed = "move";
+                    }}
+                    onDragOver={(e: any) => {
+                      e.preventDefault();
+                      e.dataTransfer!.dropEffect = "move";
+                    }}
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center justify-between"
+                    className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center justify-between cursor-grab active:cursor-grabbing"
                   >
                     <span className="truncate">{task.title}</span>
 
