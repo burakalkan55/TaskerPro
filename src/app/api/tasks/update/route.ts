@@ -1,28 +1,24 @@
-export const runtime = "nodejs";
-
 import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth";
-import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: NextRequest) {
-  const cookieHeader = req.headers.get("cookie");
+export async function POST(req: Request) {
+  try {
+    const { id, title, status } = await req.json();
 
-  const token = cookieHeader
-    ?.split(";")
-    .find((c) => c.trim().startsWith("token="))
-    ?.split("=")[1];
+    if (!id) {
+      return Response.json({ error: "Task ID required" }, { status: 400 });
+    }
 
-  const decoded = token ? verifyToken(token) : null;
+    const updated = await prisma.task.update({
+      where: { id },
+      data: {
+        ...(title && { title }),
+        ...(status && { status }),
+      },
+    });
 
-  if (!decoded)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const { taskId, status } = await req.json();
-
-  const task = await prisma.task.update({
-    where: { id: taskId },
-    data: { status },
-  });
-
-  return NextResponse.json({ task });
+    return Response.json({ task: updated }, { status: 200 });
+  } catch (err) {
+    console.error(err);
+    return Response.json({ error: "Update failed" }, { status: 500 });
+  }
 }

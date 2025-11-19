@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -19,8 +19,18 @@ export default function RoomBoardPage() {
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [modalOpen, setModalOpen] = useState(false);
+
+  // CREATE MODAL
+  const [createOpen, setCreateOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
+
+  // EDIT MODAL
+  const [editTask, setEditTask] = useState<Task | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editStatus, setEditStatus] = useState<Status>("todo");
+
+  // DELETE MODAL
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const statuses: Status[] = ["todo", "doing", "done"];
 
@@ -30,9 +40,9 @@ export default function RoomBoardPage() {
     done: tasks.filter((t) => t.status === "done"),
   };
 
+  // ---- FETCH TASKS ----
   async function fetchTasks() {
     if (!roomId) return;
-
     try {
       const res = await fetch(`/api/tasks/list?roomId=${roomId}`, {
         credentials: "include",
@@ -57,7 +67,8 @@ export default function RoomBoardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId]);
 
-  async function handleCreateTask(e: React.FormEvent) {
+  // ---- CREATE TASK ----
+  async function handleCreateTask(e: FormEvent) {
     e.preventDefault();
     if (!newTitle.trim()) return;
 
@@ -66,28 +77,99 @@ export default function RoomBoardPage() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: newTitle, roomId }),
+        body: JSON.stringify({ title: newTitle.trim(), roomId }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        console.error(data.error || "create error");
+        console.error(data.error || "Create failed");
         return;
       }
 
-      // Hızlı hissetmesi için local state’e ekle
+      // optimistic
       setTasks((prev) => [...prev, data.task]);
       setNewTitle("");
-      setModalOpen(false);
+      setCreateOpen(false);
     } catch (err) {
       console.error("createTask error:", err);
     }
   }
 
+  // ---- OPEN EDIT MODAL ----
+  function openEditModal(task: Task) {
+    setEditTask(task);
+    setEditTitle(task.title);
+    setEditStatus(task.status);
+  }
+
+  // ---- UPDATE TASK ----
+  async function handleUpdateTask() {
+    if (!editTask) return;
+    if (!editTitle.trim()) return;
+
+    try {
+      const res = await fetch("/api/tasks/update", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editTask.id,
+          title: editTitle.trim(),
+          status: editStatus,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        console.error(data.error || "Update failed");
+        return;
+      }
+
+      // local state güncelle
+      setTasks((prev) =>
+        prev.map((t) => (t.id === data.task.id ? data.task : t))
+      );
+
+      setEditTask(null);
+    } catch (err) {
+      console.error("updateTask error:", err);
+    }
+  }
+
+  // ---- OPEN DELETE MODAL ----
+  function openDeleteModal(id: string) {
+    setDeleteId(id);
+  }
+
+  // ---- DELETE TASK ----
+  async function handleDeleteTask() {
+    if (!deleteId) return;
+
+    try {
+      const res = await fetch("/api/tasks/delete", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: deleteId }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        console.error(data.error || "Delete failed");
+        return;
+      }
+
+      setTasks((prev) => prev.filter((t) => t.id !== deleteId));
+      setDeleteId(null);
+    } catch (err) {
+      console.error("deleteTask error:", err);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-slate-50">
-      
+
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
         {/* HEADER */}
@@ -102,7 +184,7 @@ export default function RoomBoardPage() {
           </div>
 
           <button
-            onClick={() => setModalOpen(true)}
+            onClick={() => setCreateOpen(true)}
             className="self-start sm:self-auto inline-flex items-center px-4 sm:px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-blue-700 transition"
           >
             + Add Task
@@ -147,9 +229,24 @@ export default function RoomBoardPage() {
                     key={task.id}
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer"
+                    className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-800 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center justify-between"
                   >
-                    {task.title}
+                    <span className="truncate">{task.title}</span>
+
+                    <div className="flex items-center gap-2 ml-3 shrink-0">
+                      <button
+                        onClick={() => openEditModal(task)}
+                        className="text-[11px] px-2 py-1 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 transition"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => openDeleteModal(task.id)}
+                        className="text-[11px] px-2 py-1 rounded-md bg-red-50 text-red-600 hover:bg-red-100 transition"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </motion.div>
                 ))}
               </div>
@@ -160,7 +257,7 @@ export default function RoomBoardPage() {
 
       {/* CREATE TASK MODAL */}
       <AnimatePresence>
-        {modalOpen && (
+        {createOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -188,7 +285,7 @@ export default function RoomBoardPage() {
                 <div className="flex justify-end gap-3">
                   <button
                     type="button"
-                    onClick={() => setModalOpen(false)}
+                    onClick={() => setCreateOpen(false)}
                     className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-100"
                   >
                     Cancel
@@ -201,6 +298,108 @@ export default function RoomBoardPage() {
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* EDIT TASK MODAL */}
+      <AnimatePresence>
+        {editTask && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 10 }}
+              className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6"
+            >
+              <h2 className="text-xl font-semibold text-slate-900 mb-4">
+                Edit Task
+              </h2>
+
+              <div className="space-y-4">
+                <input
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-200"
+                  placeholder="Task title..."
+                />
+
+                <select
+                  value={editStatus}
+                  onChange={(e) => setEditStatus(e.target.value as Status)}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-200"
+                >
+                  <option value="todo">To-do</option>
+                  <option value="doing">Doing</option>
+                  <option value="done">Done</option>
+                </select>
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setEditTask(null)}
+                    className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-100"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleUpdateTask}
+                    className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* DELETE TASK MODAL */}
+      <AnimatePresence>
+        {deleteId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 10 }}
+              className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6"
+            >
+              <h2 className="text-xl font-semibold text-slate-900 mb-2">
+                Delete Task?
+              </h2>
+              <p className="text-sm text-slate-600 mb-5">
+                This action cannot be undone.
+              </p>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setDeleteId(null)}
+                  className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteTask}
+                  className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700"
+                >
+                  Delete
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}
