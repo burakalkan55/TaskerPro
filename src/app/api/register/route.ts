@@ -29,7 +29,7 @@ export async function POST(req: Request) {
       data: {
         name,
         email,
-        password: hashedPassword,
+        password: hashedPassword,  
       },
       select: { id: true, name: true, email: true },
     });
