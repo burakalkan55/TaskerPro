@@ -29,5 +29,5 @@ export function middleware(req: any) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/dashboard"],
+  matcher: ["/dashboard/:path*", "/dashboard" , "/room/:path*", "/room", "/profile", "/profile/:path*"],
 };
