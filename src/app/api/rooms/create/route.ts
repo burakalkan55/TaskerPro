@@ -29,6 +29,12 @@ export async function POST(req: Request) {
       data: {
         name,
         ownerId: decoded.userId,
+        members: {
+          create: [{ userId: decoded.userId }],
+        },
+      },
+      include: {
+        members: true,
       },
     });
 

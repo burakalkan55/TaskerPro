@@ -107,6 +107,13 @@ export default function InviteModal({ open, onClose, roomId }: any) {
                   : "hover:bg-gray-100"
               }`}
             >
+              <div className="flex items-center gap-2 mb-1">
+                <img
+                  src={user.avatar || "/default-avatar.png"}    
+                    alt={user.name}
+                    className="w-8 h-8 rounded-full border"
+                />
+              </div>
               <div className="font-medium">{user.name}</div>
               <div className="text-xs text-gray-500">{user.email}</div>
             </button>
