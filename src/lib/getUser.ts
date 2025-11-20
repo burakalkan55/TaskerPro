@@ -10,15 +10,10 @@ export type AuthUser = {
   avatar: string | null;
 };
 
-/**
- * Server Components veya API route'larda,
- * next/headers.cookies() ile token okuyup user döner.
- */
+/* --------------------- SERVER COMPONENT İÇİN --------------------- */
 export async function getUser(): Promise<AuthUser | null> {
   try {
-    const cookieStore = cookies();
-    const token = (await cookieStore).get("token")?.value;
-
+    const token = (await cookies()).get("token")?.value;
     if (!token) return null;
 
     const decoded = verifyToken(token);
@@ -41,11 +36,7 @@ export async function getUser(): Promise<AuthUser | null> {
   }
 }
 
-/**
- * API route'larda Request objesinden cookie header'ı okuyup user döner.
- * Şu an senin `import { getUserFromToken } from "@/lib/getUser";` 
- * diye kullandığın fonksiyon BU olacak.
- */
+/* --------------------- API ROUTE İÇİN --------------------- */
 export async function getUserFromToken(req: Request): Promise<AuthUser | null> {
   try {
     const cookieHeader = req.headers.get("cookie");
@@ -53,8 +44,8 @@ export async function getUserFromToken(req: Request): Promise<AuthUser | null> {
 
     const token = cookieHeader
       .split(";")
-      .map((part) => part.trim())
-      .find((part) => part.startsWith("token="))
+      .map((p) => p.trim())
+      .find((p) => p.startsWith("token="))
       ?.split("=")[1];
 
     if (!token) return null;
@@ -72,7 +63,7 @@ export async function getUserFromToken(req: Request): Promise<AuthUser | null> {
       },
     });
 
-    return user as AuthUser | null;
+    return user as AuthUser;
   } catch (err) {
     console.error("getUserFromToken error:", err);
     return null;

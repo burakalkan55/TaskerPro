@@ -16,9 +16,10 @@ model User {
   bio       String?
   createdAt DateTime @default(now())
 
-  roomsOwned  Room[]       @relation("RoomOwner")
-  roomMembers RoomMember[]
-  sentInvites Invite[]     @relation("SentInvites")
+  roomsOwned      Room[]       @relation("RoomOwner")
+  roomMembers     RoomMember[]
+  sentInvites     Invite[]     @relation("InviteSender")
+  receivedInvites Invite[]     @relation("InviteReceiver")
 }
 
 model Room {
@@ -45,15 +46,16 @@ model RoomMember {
 }
 
 model Invite {
-  id            String   @id @default(cuid())
-  roomId        String
-  senderId      String
-  receiverEmail String
-  status        String   @default("pending")
-  createdAt     DateTime @default(now())
+  id         String   @id @default(uuid())
+  roomId     String
+  senderId   String
+  receiverId String   @default("temp-user") // ← GEÇİCİ DEFAULT!
+  status     String   @default("PENDING")
+  createdAt  DateTime @default(now())
 
-  room   Room @relation(fields: [roomId], references: [id])
-  sender User @relation("SentInvites", fields: [senderId], references: [id])
+  room     Room @relation(fields: [roomId], references: [id])
+  sender   User @relation("InviteSender", fields: [senderId], references: [id])
+  receiver User @relation("InviteReceiver", fields: [receiverId], references: [id])
 }
 
 model Task {

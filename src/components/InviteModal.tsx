@@ -1,114 +1,121 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
 
-interface InviteModalProps {
-  open: boolean;
-  onClose: () => void;
-  roomId: string;
-}
+export default function InviteModal({ open, onClose, roomId }: any) {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
 
-export default function InviteModal({ open, onClose, roomId }: InviteModalProps) {
-  const [email, setEmail] = useState("");
-  const [sending, setSending] = useState(false);
-  const [message, setMessage] = useState("");
+  async function searchUser(text: string) {
+    setQuery(text);
+    setSelectedUser(null);
 
-  async function handleInvite() {
-    if (!email.trim()) return;
+    if (!text.trim()) {
+      setResults([]);
+      return;
+    }
 
-    setSending(true);
-    setMessage("");
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/users/search?q=${text}`);
+      const data = await res.json();
+      setResults(data.users || []);
+    } catch (err) {
+      console.error("search error:", err);
+    }
+    setLoading(false);
+  }
+
+  async function sendInvite() {
+    if (!selectedUser) return;
 
     try {
       const res = await fetch("/api/invite/send", {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roomId, email }),
+        body: JSON.stringify({
+          roomId,
+          receiverId: selectedUser.id, // ✔ DOĞRU ID GÖNDERİYORUZ
+        }),
       });
 
       const data = await res.json();
-
       if (!res.ok) {
-        setMessage(data.error || "Invite failed.");
-      } else {
-        setMessage("Invitation sent successfully!");
-        setEmail("");
+        alert(data.error || "Error sending invite");
+        return;
       }
-    } catch (error) {
-      setMessage("Server error.");
-    }
 
-    setSending(false);
+      alert("Invite sent!");
+      onClose();
+    } catch (err) {
+      console.error("invite send error:", err);
+    }
   }
 
+  if (!open) return null;
+
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4"
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0, y: 10 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.9, opacity: 0, y: 10 }}
-            className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6"
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+      <div className="bg-white w-full max-w-md p-6 rounded-2xl shadow-xl">
+        <h2 className="text-xl font-semibold mb-4">Invite User</h2>
+
+        {/* Arama Input */}
+        <input
+          className="w-full border px-3 py-2 rounded-lg"
+          placeholder="Search user..."
+          value={query}
+          onChange={(e) => searchUser(e.target.value)}
+        />
+
+        {/* Arama Sonuçları */}
+        <div className="mt-3 border rounded-lg p-2 max-h-40 overflow-auto">
+          {loading && <p className="text-sm text-gray-500">Searching...</p>}
+
+          {!loading && results.length === 0 && (
+            <p className="text-sm text-gray-400">No users found.</p>
+          )}
+
+          {results.map((user: any) => (
+            <button
+              key={user.id}
+              onClick={() => setSelectedUser(user)}
+              className={`w-full text-left px-3 py-2 rounded-md mb-1 ${
+                selectedUser?.id === user.id
+                  ? "bg-purple-100 border border-purple-400"
+                  : "hover:bg-gray-100"
+              }`}
+            >
+              <div className="font-medium">{user.name}</div>
+              <div className="text-xs text-gray-500">{user.email}</div>
+            </button>
+          ))}
+        </div>
+
+        {/* Buttons */}
+        <div className="mt-5 flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg border hover:bg-gray-100"
           >
-            {/* TITLE */}
-            <h2 className="text-2xl font-semibold text-slate-900 mb-3">
-              Invite User
-            </h2>
+            Cancel
+          </button>
 
-            <p className="text-sm text-slate-500 mb-4">
-              Enter the email of the user you want to invite to this room.
-            </p>
-
-            {/* INPUT */}
-            <input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              type="email"
-              placeholder="User email…"
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-200"
-            />
-
-            {/* MESSAGE */}
-            {message && (
-              <p
-                className={`mt-2 text-sm ${
-                  message.includes("success")
-                    ? "text-green-600"
-                    : "text-red-600"
-                }`}
-              >
-                {message}
-              </p>
-            )}
-
-            {/* BUTTONS */}
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={onClose}
-                className="px-4 py-2 text-sm border border-slate-300 rounded-lg hover:bg-slate-100"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleInvite}
-                disabled={sending}
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                {sending ? "Sending..." : "Send Invite"}
-              </button>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          <button
+            disabled={!selectedUser}
+            onClick={sendInvite}
+            className={`px-4 py-2 rounded-lg text-white 
+              ${
+                selectedUser
+                  ? "bg-purple-600 hover:bg-purple-700"
+                  : "bg-gray-300 cursor-not-allowed"
+              }`}
+          >
+            Send Invite
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
