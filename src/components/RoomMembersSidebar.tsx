@@ -5,7 +5,7 @@ import Image from "next/image";
 
 export default function RoomMembersSidebar({ roomId }: { roomId: string }) {
   const [members, setMembers] = useState<any[]>([]);
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
 
   async function fetchMembers() {
     const res = await fetch(`/api/rooms/members?roomId=${roomId}`);
