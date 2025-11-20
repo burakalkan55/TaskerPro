@@ -207,6 +207,13 @@ export default function Navbar() {
                 <a href="#why" onClick={closeMenu} className="py-2 font-medium">
                   Why Us
                 </a>
+                <Link
+                  href="/dashboard"
+                  onClick={closeMenu}
+                  className="py-2 font-medium"
+                >
+                  Dashboard
+                </Link>
               </>
             ) : (
               <>
