@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
+import IncomingInvitesModal from "@/components/IncomingInvitesModal";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function Dashboard() {
   const [authChecking, setAuthChecking] = useState(true);
   const [openModal, setOpenModal] = useState(false);
   const [roomName, setRoomName] = useState("");
+  const [openInvitesModal, setOpenInvitesModal] = useState(false);
 
   // 👇 ÖNCE AUTH KONTROLÜ
   useEffect(() => {
@@ -73,7 +75,7 @@ export default function Dashboard() {
   if (authChecking) {
     return (
       <main className="min-h-screen bg-gray-50">
-        <Navbar />
+        <h1>yükleniyor</h1>
         <div className="pt-32 text-center text-gray-600">Checking access...</div>
       </main>
     );
@@ -81,8 +83,7 @@ export default function Dashboard() {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      
-
+      {/* Navbar can be added here if needed */}
       <div className="pt-28 max-w-6xl mx-auto px-6">
         {/* PAGE TITLE */}
         <motion.h1
@@ -98,14 +99,26 @@ export default function Dashboard() {
           Manage rooms, collaborate and organize your workflow.
         </p>
 
-        {/* CREATE ROOM BUTTON */}
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setOpenModal(true)}
-          className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition shadow-sm"
-        >
-          + Create Room
-        </motion.button>
+        <div className="flex gap-4 mb-6">
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setOpenModal(true)}
+            className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition shadow-sm"
+          >
+            + Create Room
+          </motion.button>
+
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setOpenInvitesModal(true)}
+            className="px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition shadow-sm flex items-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 20.25a7.5 7.5 0 1115 0v.75a.75.75 0 01-.75.75h-13.5a.75.75 0 01-.75-.75v-.75z" />
+            </svg>
+            Incoming Invites
+          </motion.button>
+        </div>
 
         {/* ROOM CARDS GRID */}
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -192,6 +205,9 @@ export default function Dashboard() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* INCOMING INVITES MODAL */}
+      <IncomingInvitesModal open={openInvitesModal} onClose={() => setOpenInvitesModal(false)} />
     </main>
   );
 }

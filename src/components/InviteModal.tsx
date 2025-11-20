@@ -28,6 +28,9 @@ export default function InviteModal({ open, onClose, roomId }: any) {
     setLoading(false);
   }
 
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+
   async function sendInvite() {
     if (!selectedUser) return;
 
@@ -37,19 +40,25 @@ export default function InviteModal({ open, onClose, roomId }: any) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           roomId,
-          receiverId: selectedUser.id, // ✔ DOĞRU ID GÖNDERİYORUZ
+          receiverId: selectedUser.id,
         }),
       });
 
       const data = await res.json();
       if (!res.ok) {
-        alert(data.error || "Error sending invite");
+        setErrorMsg(data.error || "Error sending invite");
+        setTimeout(() => setErrorMsg(""), 2000);
         return;
       }
 
-      alert("Invite sent!");
-      onClose();
+      setSuccessMsg("Invite sent successfully!");
+      setTimeout(() => {
+        setSuccessMsg("");
+        onClose();
+      }, 1500);
     } catch (err) {
+      setErrorMsg("Error sending invite");
+      setTimeout(() => setErrorMsg(""), 2000);
       console.error("invite send error:", err);
     }
   }
@@ -60,6 +69,17 @@ export default function InviteModal({ open, onClose, roomId }: any) {
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
       <div className="bg-white w-full max-w-md p-6 rounded-2xl shadow-xl">
         <h2 className="text-xl font-semibold mb-4">Invite User</h2>
+
+        {successMsg && (
+          <div className="mb-3 px-4 py-2 rounded-lg bg-green-100 text-green-700 text-center font-medium animate-fade-in">
+            {successMsg}
+          </div>
+        )}
+        {errorMsg && (
+          <div className="mb-3 px-4 py-2 rounded-lg bg-red-100 text-red-700 text-center font-medium animate-fade-in">
+            {errorMsg}
+          </div>
+        )}
 
         {/* Arama Input */}
         <input
