@@ -4,6 +4,7 @@ import { useEffect, useState, FormEvent } from "react";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
 import InviteModal from "@/components/InviteModal";
+import RoomMembersSidebar from "@/components/RoomMembersSidebar";
 
 
 type Status = "todo" | "doing" | "done";
@@ -212,8 +213,9 @@ export default function RoomBoardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50">
-
+    <main className="min-h-screen bg-slate-50 relative">
+      {/* Room Members Sidebar */}
+      <RoomMembersSidebar roomId={roomId} />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
         {/* HEADER */}
@@ -250,11 +252,11 @@ export default function RoomBoardPage() {
           </div>
         </div>
 
-<InviteModal
-  open={inviteOpen}
-  onClose={() => setInviteOpen(false)}
-  roomId={roomId}
-/>
+        <InviteModal
+          open={inviteOpen}
+          onClose={() => setInviteOpen(false)}
+          roomId={roomId}
+        />
 
         {/* BOARD */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
@@ -332,6 +334,7 @@ export default function RoomBoardPage() {
                         Delete
                       </button>
                     </div>
+
                   </motion.div>
                 ))}
               </div>
