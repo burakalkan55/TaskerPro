@@ -7,29 +7,61 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Task {
+model User {
   id        String   @id @default(cuid())
-  title     String
-  status    String   @default("todo")
-  room      Room     @relation(fields: [roomId], references: [id])
-  roomId    String
+  name      String?
+  email     String   @unique
+  password  String
+  avatar    String?
+  bio       String?
   createdAt DateTime @default(now())
+
+  roomsOwned  Room[]       @relation("RoomOwner")
+  roomMembers RoomMember[]
+  sentInvites Invite[]     @relation("SentInvites")
 }
 
 model Room {
   id        String   @id @default(cuid())
   name      String
   ownerId   String
-  tasks     Task[]
   createdAt DateTime @default(now())
+
+  owner   User         @relation("RoomOwner", fields: [ownerId], references: [id])
+  members RoomMember[]
+  invites Invite[]
+  tasks   Task[]
 }
 
-model User {
+model RoomMember {
+  id       String   @id @default(cuid())
+  roomId   String
+  userId   String
+  role     String   @default("member")
+  joinedAt DateTime @default(now())
+
+  room Room @relation(fields: [roomId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Invite {
+  id            String   @id @default(cuid())
+  roomId        String
+  senderId      String
+  receiverEmail String
+  status        String   @default("pending")
+  createdAt     DateTime @default(now())
+
+  room   Room @relation(fields: [roomId], references: [id])
+  sender User @relation("SentInvites", fields: [senderId], references: [id])
+}
+
+model Task {
   id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  password  String
-  bio       String?   
-  avatar    String?   
+  title     String
+  status    String   @default("todo")
   createdAt DateTime @default(now())
+
+  roomId String
+  room   Room   @relation(fields: [roomId], references: [id])
 }

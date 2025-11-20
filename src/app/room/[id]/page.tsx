@@ -3,6 +3,7 @@
 import { useEffect, useState, FormEvent } from "react";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence, Reorder } from "framer-motion";
+import InviteModal from "@/components/InviteModal";
 
 
 type Status = "todo" | "doing" | "done";
@@ -39,6 +40,9 @@ export default function RoomBoardPage() {
     doing: tasks.filter((t) => t.status === "doing"),
     done: tasks.filter((t) => t.status === "done"),
   };
+
+  const [inviteOpen, setInviteOpen] = useState(false);
+  
 
   // ---- FETCH TASKS ----
   async function fetchTasks() {
@@ -211,25 +215,49 @@ export default function RoomBoardPage() {
     <main className="min-h-screen bg-slate-50">
 
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
-        {/* HEADER */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">
-              Room Board
-            </h1>
-            <p className="text-slate-500 text-sm sm:text-base mt-1">
-              Organize your work in To-do, Doing and Done columns.
-            </p>
-          </div>
+     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
 
-          <button
-            onClick={() => setCreateOpen(true)}
-            className="self-start sm:self-auto inline-flex items-center px-4 sm:px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-blue-700 transition"
-          >
-            + Add Task
-          </button>
-        </div>
+  {/* HEADER */}
+  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+
+    {/* LEFT SIDE: TITLE */}
+    <div>
+      <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">
+        Room Board
+      </h1>
+      <p className="text-slate-500 text-sm sm:text-base mt-1">
+        Organize your work in To-do, Doing and Done columns.
+      </p>
+    </div>
+
+    {/* RIGHT SIDE BUTTONS */}
+    <div className="flex items-center gap-3">
+
+      {/* INVITE BUTTON */}
+      <button
+        onClick={() => setInviteOpen(true)}
+        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg
+                   bg-purple-600 text-white text-sm font-medium shadow-sm 
+                   hover:bg-purple-700 transition"
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+        Invite
+      </button>
+
+      {/* ADD TASK BUTTON */}
+      <button
+        onClick={() => setCreateOpen(true)}
+        className="inline-flex items-center px-4 sm:px-5 py-2.5 
+                   bg-blue-600 text-white text-sm font-medium 
+                   rounded-lg shadow-sm hover:bg-blue-700 transition"
+      >
+        + Add Task
+      </button>
+
+    </div>
+  </div>
 
         {/* BOARD */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
