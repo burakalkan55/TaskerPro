@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import Navbar from "@/components/Navbar";
+
 import IncomingInvitesModal from "@/components/IncomingInvitesModal";
 
 export default function Dashboard() {
@@ -27,11 +27,29 @@ export default function Dashboard() {
     }
   }
 
+  // Fetch rooms
+  async function fetchRooms() {
+    try {
+      const res = await fetch("/api/rooms/list");
+      const data = await res.json();
+      setRooms(data.rooms || []);
+    } catch (err) {
+      console.error("Room fetch error:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Davet kabul edildiğinde tetiklenecek fonksiyon
+  async function handleInviteAccepted() {
+    await fetchRooms();
+    await fetchInviteCount();
+  }
+
   useEffect(() => {
     fetchInviteCount();
   }, []);
 
-  // Update invite count when modal closes
   useEffect(() => {
     if (!openInvitesModal) fetchInviteCount();
   }, [openInvitesModal]);
@@ -57,19 +75,6 @@ export default function Dashboard() {
         setAuthChecking(false);
       }
     }
-
-    async function fetchRooms() {
-      try {
-        const res = await fetch("/api/rooms/list");
-        const data = await res.json();
-        setRooms(data.rooms || []);
-      } catch (err) {
-        console.error("Room fetch error:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
     checkAuth();
   }, [router]);
 
@@ -90,6 +95,22 @@ export default function Dashboard() {
       setRoomName("");
     }
   }
+  async function handleDeleteRoom(id: string) {
+    if (!confirm("Are you sure you want to delete this room?")) return;
+
+    const res = await fetch(`/api/rooms/delete?id=${id}`, {
+      method: "DELETE",
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      setRooms((prev) => prev.filter((r) => r.id !== id));
+    } else {
+      alert(data.error || "Error deleting room");
+    }
+  }
+
 
   // 🔄 Auth kontrolü bitene kadar basit loading göster
   if (authChecking) {
@@ -163,7 +184,7 @@ export default function Dashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
                 onClick={() => (window.location.href = `/room/${room.id}`)}
-                className="cursor-pointer bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all"
+                className="cursor-pointer bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all relative"
               >
                 <h3 className="text-xl font-semibold text-gray-900">
                   {room.name}
@@ -172,6 +193,17 @@ export default function Dashboard() {
                 <p className="text-gray-500 text-sm mt-2">
                   Created {new Date(room.createdAt).toLocaleDateString()}
                 </p>
+
+                {/* Delete button always visible, positioned top right */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteRoom(room.id);
+                  }}
+                  className="px-2 py-1 text-xs bg-red-600 text-white rounded-md hover:bg-red-700 absolute top-3 right-3"
+                >
+                  Delete
+                </button>
 
                 <div className="mt-3 text-blue-600 font-medium hover:underline">
                   Open →
@@ -232,7 +264,11 @@ export default function Dashboard() {
       </AnimatePresence>
 
       {/* INCOMING INVITES MODAL */}
-      <IncomingInvitesModal open={openInvitesModal} onClose={() => setOpenInvitesModal(false)} />
+      <IncomingInvitesModal 
+        open={openInvitesModal} 
+        onClose={() => setOpenInvitesModal(false)} 
+        onInviteAccepted={handleInviteAccepted}
+      />
     </main>
   );
 }

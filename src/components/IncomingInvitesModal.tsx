@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-export default function IncomingInvitesModal({ open, onClose }: any) {
+export default function IncomingInvitesModal({ open, onClose, onInviteAccepted }: any) {
   const [invites, setInvites] = useState([]);
   const [successMsg, setSuccessMsg] = useState("");
 
@@ -25,6 +25,9 @@ export default function IncomingInvitesModal({ open, onClose }: any) {
     setSuccessMsg("Başarıyla kabul edildi!");
     setTimeout(() => setSuccessMsg(""), 2000);
     loadInvites();
+    if (onInviteAccepted) {
+      onInviteAccepted();
+    }
   }
 
   async function rejectInvite(id: string) {
