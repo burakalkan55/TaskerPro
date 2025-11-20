@@ -15,6 +15,26 @@ export default function Dashboard() {
   const [openModal, setOpenModal] = useState(false);
   const [roomName, setRoomName] = useState("");
   const [openInvitesModal, setOpenInvitesModal] = useState(false);
+  const [inviteCount, setInviteCount] = useState(0);
+  // Fetch invite count
+  async function fetchInviteCount() {
+    try {
+      const res = await fetch("/api/invite/list");
+      const data = await res.json();
+      setInviteCount((data.invites || []).length);
+    } catch (err) {
+      setInviteCount(0);
+    }
+  }
+
+  useEffect(() => {
+    fetchInviteCount();
+  }, []);
+
+  // Update invite count when modal closes
+  useEffect(() => {
+    if (!openInvitesModal) fetchInviteCount();
+  }, [openInvitesModal]);
 
   // 👇 ÖNCE AUTH KONTROLÜ
   useEffect(() => {
@@ -111,12 +131,17 @@ export default function Dashboard() {
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={() => setOpenInvitesModal(true)}
-            className="px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition shadow-sm flex items-center gap-2"
+            className="relative px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition shadow-sm flex items-center gap-2"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 20.25a7.5 7.5 0 1115 0v.75a.75.75 0 01-.75.75h-13.5a.75.75 0 01-.75-.75v-.75z" />
             </svg>
             Incoming Invites
+            {inviteCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full px-2 py-0.5 shadow-lg animate-bounce">
+                {inviteCount}
+              </span>
+            )}
           </motion.button>
         </div>
 
