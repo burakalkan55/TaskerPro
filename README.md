@@ -1,36 +1,102 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Uygulamaya buradan ulaşabilirsiniz :  https://taskerpro-seven.vercel.app/
 
-## Getting Started
 
-First, run the development server:
+## ✨ TaskerPro – Features Overview
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+TaskerPro, ekip çalışmasını hızlandırmak ve oda (workspace) bazlı görev yönetimini kolaylaştırmak için geliştirilmiş modern ve hızlı bir iş yönetim uygulamasıdır.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 🚀 Ana Özellikler
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+#### 🔐 Kullanıcı Yönetimi
+- 🔑 JWT tabanlı güvenli giriş sistemi  
+- 👤 Login / Register / Logout  
+- 🖼️ Profil fotoğrafı yükleme (Cloudinary)  
+- ✏️ Profil bilgisi & bio güncelleme  
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+### 🏢 Oda (Room) Yönetimi
+- ➕ Yeni oda oluşturma  
+- 🗑️ Oda silme  
+- 🗂️ Her oda için ayrı görev panoları  
+- 🎛️ To-Do → Doing → Done kolon sistemi  
+- 🤝 Oda sahibi ve üyeleri görüntüleme (live sidebar)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 📩 Davet Sistemi (Invite System)
+- 🔍 Kullanıcı arama (live search – GitHub tarzı)  
+- ✉️ Odaya davet gönderme  
+- 📨 Gelen davetleri görme  
+- ✔️ Daveti kabul etme  
+- ❌ Reddetme  
+- 👥 Kabul eden kullanıcı otomatik olarak odaya üye olur  
+- 🔄 Hem gönderen hem alıcı tarafında **oda senkronize** olarak görünür  
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 📝 Görev Yönetimi (Tasking)
+- ➕ Task oluşturma  
+- ✏️ Task düzenleme  
+- 🗑️ Task silme  
+- 📌 Her oda için bağımsız task listeleri  
+- 🎨 Modern Card UI + Hover animasyonları  
+- ⚡ Framer Motion ile smooth geçişler  
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+### 🧰 Tech Stack
+
+#### 🎨 Frontend
+- ⚛️ **React 18**
+- 🧭 **Next.js 15 (App Router)**
+- 🟦 **TypeScript**
+- 🎨 **TailwindCSS**
+- 🎞️ **Framer Motion**
+
+#### 🛠️ Backend
+- 🟣 **Next.js API Routes**
+- 🧩 **Prisma ORM**
+- 🐘 **PostgreSQL (Neon.tech)**
+
+#### 🔐 Authentication
+- 🍪 HttpOnly Cookie JWT  
+- 🧱 Middleware route protection  
+
+#### ☁️ Cloud & Deployment
+- ☁️ **Cloudinary** (media upload)
+- ▲ **Vercel Deployment**
+
+---
+
+### 🗃️ Database Modelleri (Prisma)
+- 👤 User  
+- 🏢 Room  
+- 👥 RoomMember  
+- ✉️ Invite  
+- 📝 Task  
+
+Hepsi relational yapıda tasarlandı ve tam senkron şekilde çalışır.
+
+---
+
+
+Zamanı olmayanlar için ilgili resimler :
+
+
+
+
+
+
+
+<img width="1903" height="1079" alt="image" src="https://github.com/user-attachments/assets/ab21839f-cbe4-44fb-bbbe-b0ad2b211d43" />
+<img width="1347" height="719" alt="image" src="https://github.com/user-attachments/assets/1f6f1a0d-da00-4d0a-990f-59ab770c6add" />
+<img width="597" height="421" alt="image" src="https://github.com/user-attachments/assets/663a9c70-0bde-4f27-9213-23135ccfb440" />
+<img width="1839" height="549" alt="image" src="https://github.com/user-attachments/assets/8705fcf9-4600-410d-87a5-19f78498162c" />
+<img width="305" height="627" alt="image" src="https://github.com/user-attachments/assets/4336b7a7-870e-4f39-88e3-d219e9a01dea" />
+
+
+
+
